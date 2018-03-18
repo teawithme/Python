@@ -2,7 +2,7 @@
 
 import sys
 import os
-from multiprocessing import Process, Pipe, Value 
+from multiprocessing import Process, Queue 
 
 argvs = sys.argv
 
@@ -20,8 +20,10 @@ def openread(filename, format):
         print(filename, ' not exists')
         sys.exit(-1)
 
-conn1, conn2 = Pipe()
-conn3, conn4 = Pipe()
+queue = Queue()
+
+#conn1, conn2 = Pipe()
+#conn3, conn4 = Pipe()
 
 def getinput():
 
@@ -35,7 +37,7 @@ def getinput():
     rawdata.append(cfgraw)
     rawdata.append(uraw)
     #print(rawdata)
-    conn1.send(rawdata)
+    queue.put(rawdata)
 
 def cal():
     tax_thr = 3500
@@ -43,7 +45,7 @@ def cal():
     pre_saldict = {}
     post_saldict = {}
     
-    rawdata = conn2.recv()
+    rawdata = queue.get()
     cfgraw = rawdata[0]
     uraw = rawdata[1]
 
@@ -111,10 +113,10 @@ def cal():
             outdata.append(data_per)    
         except:
             print("Parameter Error")
-    conn3.send(outdata)
+    queue.put(outdata)
 
 def output():
-    outdata = conn4.recv()
+    outdata = queue.get()
     with open(salfile,'a') as file:
         for item in outdata:
             file.write(item)
