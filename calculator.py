@@ -1,15 +1,55 @@
-#!/usr/bin/env python3
+#! /usr/bin/env python3
 
-import sys
+import getopt, sys
 import os
+import configparser
 from multiprocessing import Process, Queue 
+from datetime import datetime
 
-argvs = sys.argv
+def usage():
+  print('Usage: calculator.py -C cityname -c configfile -d userdata -o resultdata')
 
-if argvs[1] == '-c'  and argvs[3] == '-d' and argvs[5] == '-o':
-    cfgfile = argvs[2]
-    usrfile = argvs[4]
-    salfile = argvs[6]
+def optparser():
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], "C:c:d:o:h", ["help"])
+        opts_dcit = dict((x, y) for x, y in opts)
+
+        cityname = opts_dcit.get('-C')
+        if cityname is None:
+            cityname = 'DEFAULT'
+        else:
+            cityname = cityname.upper()
+
+        cfgfile = opts_dcit.get('-c')
+        if cfgfile is None:
+            print('Configure file not defined')
+            sys.exit(2)
+        usrfile = opts_dcit.get('-d')
+        if usrfile is None:
+            print('User file not defined')
+            sys.exit(2)
+        salfile = opts_dcit.get('-o')
+        if salfile is None:
+            print('Result file not defined')
+            sys.exit(2)
+    except getopt.GetoptError as err:
+    	# print help information and exit:
+    	print(err)
+    	usage()
+    	sys.exit(2)
+    for o, a in opts:
+    	if o in ("-h", "--help"):
+    		usage()
+    		sys.exit()
+    return {'cityname':cityname, 'cfgfile':cfgfile, 'usrfile':usrfile,'salfile':salfile}
+
+def readcfg(filename):
+    config = configparser.ConfigParser()
+    config.optionxform = str
+    config.read(filename)
+    #for key in config['DEFAULT']: 
+        #print(key)
+    return config
 
 def openread(filename, format):
     if os.path.exists(filename):
@@ -19,24 +59,18 @@ def openread(filename, format):
     else:
         print(filename, ' not exists')
         sys.exit(-1)
-
-queue = Queue()
-
-#conn1, conn2 = Pipe()
-#conn3, conn4 = Pipe()
-
+    
 def getinput():
+    opts = optparser()
+    
+    cfgraw = readcfg(opts['cfgfile'])
+    uraw = openread(opts['usrfile'],'r')
 
-    cfgraw = openread(cfgfile,'r')
-    uraw = openread(usrfile,'r')
-    
-    #print(cfgraw)
-    #print(uraw)
     rawdata = []
-    
+    rawdata.append(opts['cityname'])
     rawdata.append(cfgraw)
     rawdata.append(uraw)
-    #print(rawdata)
+    rawdata.append(opts['salfile'])
     queue.put(rawdata)
 
 def cal():
@@ -46,34 +80,36 @@ def cal():
     post_saldict = {}
     
     rawdata = queue.get()
-    cfgraw = rawdata[0]
-    uraw = rawdata[1]
+    cityname = rawdata[0]
+    #print(cityname)
+    cfgraw = rawdata[1]
+    uraw = rawdata[2]
+    salfile = rawdata[3]
+    #print(cfgraw[cityname])
 
     sirate = 0
-    for cfg in cfgraw:
-        try:
-            siname, value = cfg.split('=')
-            sidict[siname] = float(value)
-            if siname != 'JiShuL ' and siname != 'JiShuH ':
-                sirate += sidict[siname]
-        except:
-            print('Configure File Format Error')
-
+    for key in cfgraw[cityname]: 
+        #print(key)
+        sidict[key] = float(cfgraw[cityname][key])
+        if key != 'JiShuL' and key != 'JiShuH':
+            sirate += sidict[key]
+    #print(sidict)
     for user in uraw:
         try:
             eid, salary_str = user.split(',')
             pre_saldict[eid] = salary_str
         except:
             print('User File Format Error')
-    #print(pre_saldict)
+    
     outdata = []
+    outdata.append(salfile)
     for eid, salary_str in pre_saldict.items():
         try: 
             salary = int(salary_str)
-            if salary < sidict['JiShuL ']:
-                si_pay = sidict['JiShuL '] * sirate
-            elif salary > sidict['JiShuH ']:
-                si_pay = sidict['JiShuH '] * sirate
+            if salary < sidict['JiShuL']:
+                si_pay = sidict['JiShuL'] * sirate
+            elif salary > sidict['JiShuH']:
+                si_pay = sidict['JiShuH'] * sirate
             else:
                 si_pay = salary * sirate
             if salary <= tax_thr:
@@ -109,7 +145,8 @@ def cal():
             #post_saldict[eid] = post_salary
             #post_salpair = str(eid) + ':' + str(post_salary) 
             #print(post_salpair)
-            data_per = str(eid) + ',' + str(salary) + ',' + str(format(si_pay,".2f")) + ',' + str(format(tax,".2f")) + ',' + str(post_salary) + '\n'
+            t = datetime.strftime(datetime.now(),'%Y-%m-%d %H:%M:%S')
+            data_per = str(eid) + ',' + str(salary) + ',' + str(format(si_pay,".2f")) + ',' + str(format(tax,".2f")) + ',' + str(post_salary) + ',' + t + '\n'
             outdata.append(data_per)    
         except:
             print("Parameter Error")
@@ -117,17 +154,17 @@ def cal():
 
 def output():
     outdata = queue.get()
+    salfile = outdata.pop(0)
     with open(salfile,'a') as file:
         for item in outdata:
             file.write(item)
+
+queue = Queue()
 
 def main():
     Process(target = getinput).start()
     Process(target = cal).start()
     Process(target = output).start()
 
-if __name__ == '__main__':
-    main()
-    
-
-
+if __name__ == "__main__":
+	main()
