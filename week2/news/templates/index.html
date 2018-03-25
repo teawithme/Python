@@ -5,7 +5,7 @@
 {% endblock %}
 
 {% block content %}
-    {% for id, title in idtdict.items() %}
-        <a href={{ 'http://localhost:3000/files/%s'%id }}>{{ title }}</a>
+    {% for id, title in idcontdict.items() %}
+    <a href={{ 'http://localhost:3000/files/%s'%id }}>{{ title }}{{ idtagdict[id] }}</a>
     {% endfor %}
 {% endblock %}

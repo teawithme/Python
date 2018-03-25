@@ -6,11 +6,15 @@ import json
 from flask import Flask, render_template, abort
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
+from pymongo import MongoClient
 
 app = Flask(__name__)
 app.config['TEMPLATES_AUTO_RELAOD'] = True
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root@localhost/shiyanlou'
 db = SQLAlchemy(app)
+
+client = MongoClient('127.0.0.1', 27017)
+dbm = client.shiyanloum
 
 class File(db.Model):
     id = db.Column(db.Integer, primary_key = True)
@@ -30,6 +34,21 @@ class File(db.Model):
 
     def __repr__(self):
         return '<File %r>' % self.title
+    
+    def add_tag(self, tag_name):
+        tag = {'tag_name':tag_name, 'file_id':self.id}
+        dbm.tag.insert_one(tag)
+    
+    def remove_tage(self, tag_name):
+        dbm.tag.delete_one({'tag_name':tag_name})
+
+    @property
+    def tags(self):
+        file_id = self.id
+        tag_names = []
+        for doc in dbm.tag.find({'file_id':file_id}):
+            tag_names.append(doc['tag_name'])
+        return tag_names
 
 class Category(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -57,12 +76,16 @@ class Category(db.Model):
 
 @app.route('/')
 def index():
-    idtdict = {}
+    idcontdict = {}
+    idtagdict = {}
+
     files = File.query.all()
     for file in files:
         id = file.id
-        idtdict[id] = file.title
-    return render_template('index.html',idtdict=idtdict)
+        idcontdict[id] = file.title
+        idtagdict[id] = file.tags
+        #print(tags)
+    return render_template('index.html',idcontdict=idcontdict,idtagdict = idtagdict)
 
 @app.route('/files/<file_id>')
 def file(file_id):
