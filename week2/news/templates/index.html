@@ -5,5 +5,7 @@
 {% endblock %}
 
 {% block content %}
-    {{ title }}
+    {% for id, title in {{ idcondict }} %}
+        <a href='http://localhost:3000/files/{}'.format({{ id }})>{{ title }}</a>
+    {% endfor %}
 {% endblock %}

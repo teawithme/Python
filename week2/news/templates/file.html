@@ -5,5 +5,7 @@
 {% endblock %}
 
 {% block content %}
-    {{ content }}
+    {% for item in file_filtered %}
+        {{ item }}
+    {% endfor %}
 {% endblock %}
