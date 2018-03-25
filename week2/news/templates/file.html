@@ -5,7 +5,8 @@
 {% endblock %}
 
 {% block content %}
-    {% for item in file_filtered %}
-        {{ item }}
-    {% endfor %}
+    {{file_filtered.id}}
+    {{file_filtered.content}}
+    {{file_filtered.created_time}}
+    {{file_filtered.category}}
 {% endblock %}

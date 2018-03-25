@@ -21,10 +21,10 @@ class File(db.Model):
     category_id = db.Column(db.Integer, db.ForeignKey('category.id'))
     category = db.relationship('Category', backref='files')
 
-    def __init__(self, title, created_time = None, category, content):
+    def __init__(self, title, category, content, created_time):
         self.title = title
         if self.created_time is None:
-            self.created_time = datetime.now()
+            self.created_time = datetime.utcnow()
         self.content = content
         self.category = category
 
@@ -58,15 +58,20 @@ class Category(db.Model):
 @app.route('/')
 def index():
     idtdict = {}
-    for id in File.query.all().id:
-        idtdict[i] = File.query.filter_by(id=id).title
-    return render_template('index.html',idtdict=idcondict)
+    files = File.query.all()
+    for file in files:
+        id = file.id
+        idtdict[id] = file.title
+    return render_template('index.html',idtdict=idtdict)
 
 @app.route('/files/<file_id>')
 def file(file_id):
-    file_filtered = File.query.filter_by(id=file_id)
+    file_filtered = File.query.filter_by(id=file_id).first()
     #if content == 'Invalid':
         #abort(404)
+    #print(type(file_filtered))
+    #print(file_filtered)
+    #print(file_filtered.created_time)
     return render_template('file.html', file_filtered=file_filtered)
 
 @app.errorhandler(404)
