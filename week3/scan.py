@@ -36,7 +36,7 @@ def connect(host,port):
 
     try:
         s.connect((host,port))
-        s.sendall('Hello, world')
+        s.sendall(b'Hello, world')
         print(port, 'open')
     except OSError as msg:
         s.close()
