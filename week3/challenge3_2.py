@@ -62,7 +62,7 @@ def split():
                 if cell.value.year == year:
                     row_num = cell.row
                     ws_temp = wb.get_sheet_by_name(str(year))
-                    print(ws_temp)
+                    #print(ws_temp)
                     n = 'A' + str(cell.row) + ':' + ('D' + str(cell.row))
                     list_to_append = list(row_to_list(w3,n))
                     for items in list_to_append:
