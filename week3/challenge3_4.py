@@ -26,13 +26,18 @@ def main():
     url404_dict = {}
     for log in logs:
         ip = log[0]
+        date = log[1]
+        ymd = datetime.strptime(date,'%d/%b/%Y:%H:%M:%S %z')
+        ymd = datetime.strftime(ymd, '%Y-%m-%d')
+        #print(ymd)
         url = log[2]
-        #print(url)
         status = log[3]
-        if ipct_dict.get(ip) is None:
-            ipct_dict[ip] = 1
-        else:
-            ipct_dict[ip] += 1
+        #print(date.year)
+        if ymd == '2017-01-11':
+            if ipct_dict.get(ip) is None:
+                ipct_dict[ip] = 1
+            else:
+                ipct_dict[ip] += 1
         if status == '404':
             if url404_dict.get(url) is None:
                 url404_dict[url] = 1
