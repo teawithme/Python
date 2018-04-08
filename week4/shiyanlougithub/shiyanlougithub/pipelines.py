@@ -12,6 +12,18 @@ from shiyanlougithub.items import RepositoryItem
 class ShiyanlougithubPipeline(object):
     def process_item(self, item, spider):
         item['update_time'] = datetime.strptime(item['update_time'], '%Y-%m-%dT%H:%M:%SZ')
+        if item['commits'] is None:
+            item['commits'] = 0
+        else:
+            item['commits'] = int(item['commits'].replace(',',''))
+        if item['branches'] is None:
+            item['branches'] = 0
+        else:
+            item['branches'] = int(item['branches'].replace(',',''))
+        if item['releases'] is None:
+            item['releases'] = 0
+        else:
+            item['releases'] = int(item['releasese'].replace(',',''))
         self.session.add(Repository(**item))
         return item
 
