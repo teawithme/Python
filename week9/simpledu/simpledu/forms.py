@@ -74,21 +74,15 @@ class LiveForm(FlaskForm):
     name = StringField('live name', validators=[Required(), Length(5, 32)])
     #description = TextAreaField('课程简介', validators=[Required(), Length(20, 256)])
     #image_url = StringField('封面图片地址', validators=[Required(), URL()])
-    user_id = StringField('user ID', validators=[Required(), Length(3, 24)])
+    user_id = IntegerField('user ID', validators=[Required(), NumberRange(min=1, message='无效的用户ID')])
     submit = SubmitField('提交')
 
     def validate_user_id(self, field):
-        if not Live.query.get(self.user_id.data):
+        if not User.query.get(self.user_id.data):
             raise ValidationError('用户不存在')
 
     def create_live(self):
         live = Live()
-        self.populate_obj(live)
-        db.session.add(live)
-        db.session.commit()
-        return live
-
-    def update_live(self, live):
         self.populate_obj(live)
         db.session.add(live)
         db.session.commit()

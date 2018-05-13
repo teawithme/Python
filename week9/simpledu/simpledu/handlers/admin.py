@@ -67,15 +67,3 @@ def create_live():
         flash('live创建成功', 'success')
         return redirect(url_for('admin.live'))
     return render_template('admin/create_live.html', form=form)
-
-
-@admin.route('/live/<int:live_id>/edit', methods=['GET', 'POST'])
-@admin_required
-def edit_live(live_id):
-    live = Live.query.get_or_404(live_id)
-    form = LiveForm(obj=live)
-    if form.validate_on_submit():
-        form.update_live(live)
-        flash('live更新成功', 'success')
-        return redirect(url_for('admin.live'))
-    return render_template('admin/edit_live.html', form=form, live=live)
